@@ -15,6 +15,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/vishusingh16/authentication-jwt/database"
 	"github.com/vishusingh16/authentication-jwt/models"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -25,7 +26,18 @@ import (
 
  func HashPassword()
 
- func VerifyPassword()
+ func VerifyPassword(userPassword string, providePassword string)(bool, string){
+	err:= bcrypt.CompareHashAndPassword([]byte(providePassword),[]byte(userPassword))
+	check :=true	
+	msg := ""
+
+	if err != nil {
+		msg = fmt.Sprintf("email or password is incorrect")
+		check = false;
+
+	}
+	return check, msg 
+ }
 
  func Signup()gin.HandlerFunc{
 
@@ -60,11 +72,48 @@ import (
 			}
 			user.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 			user.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+			user.User_id = user.ID.Hex()
+			token, refreshToken, _ := helper.GenerateAllToken(*user.Email, *user.First_name , *user.Last_name ,*user.User_type, *&user.User_id)
+			user.Token =&token
+			user.Refresh_token = &refreshToken
+				resultInsertionNumber, insertErr	 :=userCollection.InsertOne(ctx, user) 
+				if insertErr !=  nil{
+					msg:= fmt.Sprintf("user item was not created")
+					c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
+					return
+
+				}
+				defer cancel()
+				c.JSON(http.StatusOK, resultInsertionNumber)
+
+			 
+
+
 	}
  }
 
 
- func Login()
+ func Login() gin.HandlerFunc{
+	return func(c *gin.Context){
+		var ctx, cancel = 	Context.WithTimeout(context.Background(), 100*time.Second)
+        var user models.User
+		var foundUser models.User
+		 if err := 	c.BindJSON(&user); err!=nil{
+			c.JSON(http.StatusBadRequest, gin.H{"error":err.Error()})
+			return
+		 }
+
+		 err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
+		 defer cancel()
+		 if err != nil{
+			c.JSON(http.StatusInternalServerErrorm gin.H{"error" :"email or password is incorrect"})
+			return 
+		 }
+		 passwordIsValid , msg := VerifyPassword(*user.Password, *foundUser.Password)
+		 defer cancel()
+
+	}
+ }
 
  func GetUsers()
 
