@@ -24,7 +24,14 @@ import (
  var userCollection *mongo.Collection  = database.OpenCollection(database.Client, "user")
  var validate = validator.New()
 
- func HashPassword()
+ func HashPassword(password string) string{
+	bcrypt.GenerateFromPassword([] byte(password), 14)
+	if err!=nil{
+		log.Panic(err)
+
+	}
+	return string(bytes)
+ }
 
  func VerifyPassword(userPassword string, providePassword string)(bool, string){
 	err:= bcrypt.CompareHashAndPassword([]byte(providePassword),[]byte(userPassword))
@@ -61,6 +68,10 @@ import (
 			log.Panic(err)
 			c.JSON(http.StatusInternalServerError,gin.H{"error" : "error while checking email" })
 		 }
+
+		 password := 	HashPassword(*user.password)
+		 user.Password = &password
+
 		 	count , err := userCollection.CountDocuments(ctx, bson.M{"phone": user.Phone})
 			defer cancel()
 			if err != nil{
@@ -111,11 +122,49 @@ import (
 		 }
 		 passwordIsValid , msg := VerifyPassword(*user.Password, *foundUser.Password)
 		 defer cancel()
+		 if passwordIsValid != true{
+			c.JSON(http.StatusInternalServerError, gin.H{"error":msg})
+			return 
 
+		 }
+		 if foundUser.Email == nil{
+			c.JSON(http.StatusInternalServerError, gin.H{"error" : "user not found	"})
+		 }
+        token , refreshToken, _:=helper.GenerateAllTokens(*foundUser.Email, *foundUser.First_name, *foundUser.Last_name, *foundUser.User_type, *foundUser.User_id)
+		helper.UpdateAllTokens(	token , refreshToken,foundUser.User_id)
+		err = userCollection.FindOne(ctx, bson.M{"user_id":foundUser.User_id}).Decode(&foundUser)
+		if err != nil{
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return 
+		}
+		c.JSON(http.StatusOK, foundUser)
 	}
  }
 
- func GetUsers()
+ func GetUsers() gin.HandlerFunc{
+	return func(c *gin.Context){
+		helper.CheckUserType(c,"ADMIN"); err != nil{
+			c.JSON(http.StatusBadRequest , gin.H{"error": err.Error()})
+			return
+		}
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+			recordPerPage, err := strconv.Atoi(c.Query("recordPerPage"))
+			if err != nil || recordPerPage <= 1{
+
+				recordPerPage =10
+
+			}
+			strconv.Atoi(c.Query("page"))	
+			if err != nil || page<1 {
+				page =1
+			}	
+			startIndex := (page-1)*recordPerPage
+			startIndex, err = strconv.Atoi(c.Query("startIndex"))
+			//match stage
+			// groupstage
+	}
+
+ }
 
  func GetUser() gin.HandlerFunc {
 	return func(c *gin.Context){
