@@ -3,8 +3,8 @@ package routes
 
 import(
 
-	controller "Authentication-jwt/controllers"
-	           "Authentication-jwt/middleware"
+	controller "github.com/vishusingh16/Authentication-jwt/controllers"
+	           "github.com/vishusingh16/Authentication-jwt/middleware"
 	            "github.com/gin-gonic/gin"
  
 )

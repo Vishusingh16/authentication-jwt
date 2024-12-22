@@ -4,9 +4,18 @@ import(
 	routes "github.com/vishusingh16/authentication-jwt/routes"
 	"os"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"log"
 )
 
 func main(){
+
+	err:= godotenv.Load(".env")
+
+	if err!=nil {
+		log.Fatal("Error Loading .env file")
+
+	}
 	port := os.Getenv("PORT")
 
 	if port==""{

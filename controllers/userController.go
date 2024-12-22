@@ -2,8 +2,9 @@ package controllers
 
 import (
 	"Authentication-jwt/helpers"
-	helper "Authentication-jwt/helpers"
-	"Authentication-jwt/models"
+	helper "github.com/vishusingh16/Authentication-jwt/helpers"
+	"github.com/vishusingh16/Authentication-jwt/models"
+	
 	"context"
 	"fmt"
 	"log"
@@ -15,6 +16,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/vishusingh16/authentication-jwt/database"
 	"github.com/vishusingh16/authentication-jwt/models"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -25,7 +27,7 @@ import (
  var validate = validator.New()
 
  func HashPassword(password string) string{
-	bcrypt.GenerateFromPassword([] byte(password), 14)
+	bytes, err := bcrypt.GenerateFromPassword([] byte(password), 14)
 	if err!=nil{
 		log.Panic(err)
 
@@ -72,7 +74,7 @@ import (
 		 password := 	HashPassword(*user.password)
 		 user.Password = &password
 
-		 	count , err := userCollection.CountDocuments(ctx, bson.M{"phone": user.Phone})
+		 	count , err = userCollection.CountDocuments(ctx, bson.M{"phone": user.Phone})
 			defer cancel()
 			if err != nil{
 				log.Panic(err)
@@ -143,7 +145,7 @@ import (
 
  func GetUsers() gin.HandlerFunc{
 	return func(c *gin.Context){
-		helper.CheckUserType(c,"ADMIN"); err != nil{
+		if err := helper.CheckUserType(c,"ADMIN"); err != nil{
 			c.JSON(http.StatusBadRequest , gin.H{"error": err.Error()})
 			return
 		}
@@ -160,11 +162,32 @@ import (
 			}	
 			startIndex := (page-1)*recordPerPage
 			startIndex, err = strconv.Atoi(c.Query("startIndex"))
-			//match stage
-			// groupstage
-	}
+			
+			matchStage := 	bson.D{{"$match",bson.D{{}}}}
+			groupStage := bson.D{{"$group", bson.D{
+				{"_id", bson.D{{"_id", "null"}}}, 
+				{"total_count", bson.D{{"$sum", 1}}}, 
+				{"data", bson.D{{"$push", "$$ROOT"}}}}}}
+				projectStage := bson.D{
+					{"$project", bson.D{
+						{"_id", 0},
+						{"total_count", 1},
+						{"user_items", bson.D{{"$slice", []interface{}{"$data", startIndex, recordPerPage}}}},}}}
 
- }
+						result, err := userCollection.Aggregate(ctx, mongo.Pipeline{
+							matchStage, groupStage, projectStage
+						})
+						defer cancel()
+						if err != nil{
+							c.JSON(http.StatusInternalSeverError, gin.H{"error":"error occured while listing user items"})
+							
+						}
+						var alluser []bson.M
+						if err = result.All(ctx, &allusers); err!=nil{
+							log.Fatal(err)
+						}
+						c.JSON(http.StatusOK, allusers[0])}}
+ 
 
  func GetUser() gin.HandlerFunc {
 	return func(c *gin.Context){
