@@ -1,8 +1,7 @@
-package helpers
+package helper
 
 import(
 	"errors"
-
 	"github.com/gin-gonic/gin"
 
 )

@@ -3,7 +3,7 @@ package middleware
 import(
 	"fmt"
 	"net/http"
-	helper "github.com/vishusingh16/Authentiation-jwt/helpers"
+	helper "github.com/vishusingh16/authentication-jwt/helpers"
 	"github.com/gin-gonic/gin"
 
 )

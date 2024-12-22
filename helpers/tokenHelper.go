@@ -1,16 +1,13 @@
-package helper
+package helper 
 
 import (
-	"Authentication-jwt/database"
+	"github.com/vishusingh16/authentication-jwt/database"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
 	"time"
-
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/vishusingh16/authentication-jwt/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -29,7 +26,7 @@ type SignedDetail struct {
 var userCollection *mongo.Collection = database.OpenCollection(database.Client,"user")
 var SECRET_KEY string = os.Getenv("SECRET_KEY")
 func GenerateAllToken(email string , firstName string, lastName string, userType string, uid string)(signedToken string, signedRefreshToken string , err error ){
-	claims := &SignedDetails{
+	claims := &SignedDetail{
 		Email : email,
 		First_name : firstName,
 		Last_name : lastName,
@@ -39,8 +36,8 @@ func GenerateAllToken(email string , firstName string, lastName string, userType
 		StandardClaims : jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour* time.Duration(24)).Unix(),
 		},
-	
-		refreshClaims 	 := &SignedDetails{
+	}
+		refreshClaims := &SignedDetail{
 			StandardClaims : jwt.StandardClaims{
 				ExpiresAt: time.Now().Local().Add(time.Hour*time.Duration(168)).Unix(),
 			},
@@ -60,7 +57,7 @@ func GenerateAllToken(email string , firstName string, lastName string, userType
 	func ValidateToken(signedToken string) (claims *SignedDetail, msg string){
 		token , err := jwt.ParseWithClaims(
 			signedToken,
-			&SignedDetails{},
+			&SignedDetail{},
 			func(token *jwt.Token)(interface{}, error){
 				return []byte(SECRET_KEY), nil
 			},
@@ -69,7 +66,7 @@ func GenerateAllToken(email string , firstName string, lastName string, userType
 			msg = err.Error()
 			return
 		}
-		claims, ok := token.Claims.(*SignedDetails)
+		claims, ok := token.Claims.(*SignedDetail)
 		if !ok{
 			msg = fmt.Sprintf("the token is invalid")
 			msg = err.Error()
@@ -83,13 +80,13 @@ func GenerateAllToken(email string , firstName string, lastName string, userType
 		return claims, msg
 	}
 	func UpdateAllTokens(signedToken string, signedRefreshToken string, userId string)  {
-		var ctx, cancel = context.WithTimeout(context.BackGround(), 100*time.Second)
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 
         var updateObj primitive.D
 
 
 		updateObj = append(updateObj, bson.E{"token", signedToken})
-		updateObj = append(updateObj, bson.E{"refresh_token, signedRefreshToken"})
+		updateObj = append(updateObj, bson.E{"refresh_token", signedRefreshToken})
 
 		Updated_at, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		updateObj = append(updateObj, bson.E{"updated_at",Updated_at})
@@ -121,4 +118,3 @@ func GenerateAllToken(email string , firstName string, lastName string, userType
 		
 	}
 	
-}
