@@ -25,8 +25,8 @@ type SignedDetail struct {
 
 var userCollection *mongo.Collection = database.OpenCollection(database.Client,"user")
 var SECRET_KEY string = os.Getenv("SECRET_KEY")
-func GenerateAllToken(email string , firstName string, lastName string, userType string, uid string)(signedToken string, signedRefreshToken string , err error ){
-	claims := &SignedDetail{
+func GenerateAllToken(email string, firstName string, lastName string, userType string, uid string)(signedToken string, signedRefreshToken string , err error){
+	claims := &SignedDetail{	
 		Email : email,
 		First_name : firstName,
 		Last_name : lastName,
@@ -42,8 +42,8 @@ func GenerateAllToken(email string , firstName string, lastName string, userType
 				ExpiresAt: time.Now().Local().Add(time.Hour*time.Duration(168)).Unix(),
 			},
 		}
-		token, err :=jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(SECRET_KEY))
-		refreshToken , err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(SECRET_KEY))
+		token,err :=jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(SECRET_KEY))
+		refreshToken,err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(SECRET_KEY))
 		if err != nil{
 			log.Panic(err)
 			return
@@ -55,7 +55,7 @@ func GenerateAllToken(email string , firstName string, lastName string, userType
 	}
 
 	func ValidateToken(signedToken string) (claims *SignedDetail, msg string){
-		token , err := jwt.ParseWithClaims(
+		token, err := jwt.ParseWithClaims(
 			signedToken,
 			&SignedDetail{},
 			func(token *jwt.Token)(interface{}, error){
@@ -66,7 +66,7 @@ func GenerateAllToken(email string , firstName string, lastName string, userType
 			msg = err.Error()
 			return
 		}
-		claims, ok := token.Claims.(*SignedDetail)
+		claims, ok:= token.Claims.(*SignedDetail)
 		if !ok{
 			msg = fmt.Sprintf("the token is invalid")
 			msg = err.Error()
@@ -74,7 +74,7 @@ func GenerateAllToken(email string , firstName string, lastName string, userType
 		}
 		if claims.ExpiresAt < time.Now().Local().Unix() {
 			msg = fmt.Sprintf("token has expired")
-			msg = err.Error()
+		 	 msg = err.Error()
 			return
 		}
 		return claims, msg
@@ -101,6 +101,7 @@ func GenerateAllToken(email string , firstName string, lastName string, userType
 			ctx,
 			filter,
 			bson.D{
+
 				{"$set", updateObj},
 
 			},
