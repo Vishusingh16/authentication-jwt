@@ -1,11 +1,12 @@
 import React , {useState} from 'react';
-import {useHistory} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; 
+import {setAuthToken} from '../../api/api';
 import axios from "../../api/api";
 
 
 function Login(){
+    const navigate = useNavigate();
 
-    const history = useHistory();
     const [formData , setFormData] = useState({
         email:'',
         password:'',
@@ -29,10 +30,10 @@ function Login(){
             if(response.data.token){
                 localStorage.setItem('token', response.data.token);
                 setAuthToken(response.data.token);
-                history.push('/profile');
+                navigate('/profile');
             }
         }catch(err){
-            setError("login failed, please try again");
+            setError("Login failed, please try again");
         }
     };
     return(

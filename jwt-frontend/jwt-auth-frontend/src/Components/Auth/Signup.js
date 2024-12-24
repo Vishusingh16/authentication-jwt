@@ -1,17 +1,15 @@
 import React , {useState} from 'react';
 import axios from '../../api/api';
-import {useHistory} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 
 function Signup(){
-    const history = useHistory();
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         first_name:'',
         last_name:'',
         email:'',
         password:'',
-
-
     });
     const [error, setError] = useState('');
 
@@ -28,7 +26,7 @@ function Signup(){
         try{
             const response = await axios.post('/users/signup', formData);
             if(response.data.success){
-                history.push('/login');
+                navigate('/login');
 
             }
         } catch(err){
@@ -84,10 +82,10 @@ function Signup(){
                required
 
              />
-             {err && <p className="error">{error}</p>}
+             {error && <p className="error">{error}</p>}
              <button type='submit'>Sign Up</button>
             </form>
         </div>
     );
 }
-export default SignUp;
+export default Signup;

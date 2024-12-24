@@ -1,24 +1,25 @@
-import logo from './logo.svg';
+import React from 'react';
+// import {BrowserRouter as Router , Route, Switch} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Signup from './Components/Auth/Signup';
+import Login from './Components/Auth/Login';
+import UserProfile from './Components/DashBoard/UserProfile';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+
+function App(){
+  return(
+    <Router>
+      <div className='app'>
+        <h1> JWT Authentication</h1>
+        <Routes>
+          <Route path='/signup' Component={Signup} />
+          <Route path='/login' Component={Login} />
+          <Route path="/profile" Component={UserProfile} />
+
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
